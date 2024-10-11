@@ -3,6 +3,7 @@
 #include "device.h"
 #include "router.h"
 #include "tunnel.h"
+#include "command.h"
 
 int main() {
     // 장비 및 라우터 설정

@@ -65,6 +65,28 @@ int commandClear(int argc, char* argv[]) {
 	return 0;
 }
 
+//명령어 "set"
+int commandSet(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+
+	}
+	else {
+        
+	}
+	return 0;
+}
+
+//명령어 "tunnel"
+int commandTunnel(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+
+	}
+	else {
+        
+	}
+	return 0;
+}
+
 void command(char* cmd)
 {
 	CommandList* p = commandList;
