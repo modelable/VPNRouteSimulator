@@ -1,45 +1,89 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include "command.h"
+#include <ctype.h>
+#define MAX_ARGS 10
 
-void process_command(const char* command, Device* devices, Router* router1, Router* router2, Tunnel* tunnel) {
-    // ping
-    if (strncmp(command, "ping", 4) == 0) {
-        char target_ip[16];
-        sscanf(command, "ping %15s", target_ip);
-        printf("Ping 명령어 처리: %s로 ping...\n", target_ip);
+int cmd_continue = 0;
+
+typedef int cmd_func(int argc, char* argv[]);
+
+//명령어 목록(구조체)
+typedef struct {
+	char* cmd;      //명령어(문자열)
+	cmd_func* func; //명령어(함수 포인터)
+} CommandList;
+
+//명령어 목록(배열)
+CommandList commandList[] = {
+	{"ping",	commandPing},
+	{"tracert",	commandTracert},
+	{"exit",	commandExit},
+    {"clear",   commandClear}
+};
+
+//명령어 "ping"
+int commandPing(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+	
+	}
+	else {
+	
+	}	
+	return 0;
+}
+
+//명령어 "tracert"
+int commandTracert(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+
+	}
+	else {
+
+	}
+	return 0;
+}
+
+//명령어 "exit"
+int commandExit(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+
+	}
+	else {
+        
+	}
+	return 0;
+}
+
+//명령어 "clear"
+int commandClear(int argc, char* argv[]) {
+	if (argv[1] == NULL) {
+
+	}
+	else {
+        
+	}
+	return 0;
+}
+
+void command(char* cmd)
+{
+	CommandList* p = commandList;
+	int argc = 0;
+	char* argv[MAX_ARGS] = {0,};
+	char* token = strtok(cmd, " "); //문자열 분할
+
+    while (token != NULL && argc < MAX_ARGS) {
+        argv[argc++] = token;
+        token = strtok(NULL, " ");
     }
-    // 터널 IP 주소 설정
-    else if (strncmp(command, "ip address", 10) == 0) {
-        char tunnel_ip[16];
-        char subnet_mask[16];
-        sscanf(command, "ip address %15s %15s", tunnel_ip, subnet_mask);
-        printf("터널 IP 주소 설정: %s, 서브넷 마스크: %s\n", tunnel_ip, subnet_mask);
-    }
-    // 터널 소스 설정
-    else if (strncmp(command, "tunnel source", 13) == 0) {
-        char source_interface[16];
-        sscanf(command, "tunnel source %15s", source_interface);
-        printf("터널 소스 설정: %s\n", source_interface);
-    }
-    // 터널 목적지 설정
-    else if (strncmp(command, "tunnel destination", 18) == 0) {
-        char dest_interface[16];
-        sscanf(command, "tunnel destination %15s", dest_interface);
-        printf("터널 목적지 설정: %s\n", dest_interface);
-    }
-    // clear
-    else if (strcmp(command, "clear") == 0) {
-        printf("\033[H\033[J");  // 터미널 화면 클리어
-        printf("화면이 클리어되었습니다.\n");
-    }
-    // quit
-    else if (strcmp(command, "quit") == 0) {
-        printf("프로그램을 종료합니다.\n");
-        exit(0);
-    }
-    else {
-        printf("알 수 없는 명령어입니다: %s\n", command);
-    }
+
+	if (argc) {
+		while (p->cmd) {
+			if (strcmp(p->cmd, argv[0]) == 0) {
+				p->func(argc, argv);
+				break;
+			}
+			p++;
+		}
+	}
 }

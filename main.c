@@ -3,7 +3,6 @@
 #include "device.h"
 #include "router.h"
 #include "tunnel.h"
-#include "command.h"
 
 int main() {
     // 장비 및 라우터 설정
@@ -23,14 +22,19 @@ int main() {
     strcpy(router2.ip, "192.168.2.1");
     strcpy(router2.mac, "00D0.BCAE.7601");
 
-    // 콘솔에서 명령어 입력 처리
-    char command[100];
-    while (1) {
-        printf("명령어를 입력하세요: ");
-        fgets(command, sizeof(command), stdin);
-        command[strcspn(command, "\n")] = 0;  // 입력된 명령어에서 개행 문자 제거
-        process_command(command, devices, &router1, &router2, &tunnel);
-    }
+    char buffer[100];
 
-    return 0;
+	printf("=======================\n");
+	printf("Test program !\n");
+	printf("========================\n");
+
+    while (1) {
+		printf("prompt>> ");
+
+		fgets(buffer, sizeof(buffer), stdin);
+
+		command(buffer);
+	}
+
+	return 0;
 }
