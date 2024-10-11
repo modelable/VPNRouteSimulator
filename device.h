@@ -4,10 +4,8 @@
 typedef struct Device {
     char name[20];
     char ip[16];
-    char mac[18];
+    char subnet[16];
     struct Device* next;
 } Device;
-
-Device* add_device(Device* head, const char* name, const char* ip, const char* mac);
 
 #endif

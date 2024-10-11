@@ -1,15 +1,21 @@
 #ifndef ROUTER_H
 #define ROUTER_H
 
-#include "tunnel.h"
-
-typedef struct Router {
-    char name[20];
-    char ip[16];
-    char mac[18];
-    Tunnel tunnel;  // 라우터가 사용하는 VPN 터널 정보
+typedef struct {
+    FastEthernet fastEthernet[2];
+    StaticRoutes staticRoutes[10];
+    Router *tunnel;
 } Router;
 
-void router_configure_tunnel(Router* router, const char* source_ip, const char* dest_ip);
+typedef struct {
+    char ip[16];
+    char subnet[16];
+} FastEthernet;
+
+typedef struct {
+    char network[16];
+    char mask[16];
+    char nextHop[16];
+} StaticRoutes;
 
 #endif
