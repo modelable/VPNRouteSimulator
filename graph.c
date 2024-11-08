@@ -165,15 +165,15 @@ int commandRoute(int argc, char* argv[], GraphType *g) {
 	return 0;
 }
 
-//명령어 "ping"
+//명령어 "ping" (예: route 192.168.1.1 192.168.2.1)
 int commandPing(int argc, char* argv[], GraphType *g) {
 	if (argv[1] == NULL) {
 		printf("올바른 형식의 명령을 입력하세요.\n");
 		return -1;
 	} else {
-	printf("너비 우선 탐색\n");
-	bfs_list(g, 0);
-	printf("\n");
+		printf("너비 우선 탐색\n");
+		bfs_list(g, 0);
+		printf("\n");
 	}	
 	return 0;
 }
@@ -187,12 +187,6 @@ int commandTracert(int argc, char* argv[], GraphType *g) {
 
 	}
 	return 0;
-}
-
-//명령어 "exit"
-int commandExit(int argc, char* argv[], GraphType *g) {
-	printf("exit go");
-	exit(1);
 }
 
 //명령어 "clear"
@@ -223,7 +217,6 @@ CommandList commandList[] = {
 	{"route",	commandRoute},
 // 	{"ping",	commandPing},
 // 	{"tracert",	commandTracert},
- 	{"exit",	commandExit},
 // //    {"clear",   commandClear},
 // //	{"clear",   commandTunnel}
 };
@@ -242,11 +235,9 @@ void command(char* cmd, GraphType *g) {
 	if (argc) {
 		while (p->cmd) {
 			if (strcmp(p->cmd, argv[0]) == 0) {
-				printf("debug 1\n");
 				p->func(argc, argv, g);
 				break;
-			} else if (strcmp("exit", argv[0]) == 0) {
-				printf("debug 2\n");
+			} else if (strcmp("exit\n", argv[0]) == 0) {
 				exit(1);
 			}
 			p++;
