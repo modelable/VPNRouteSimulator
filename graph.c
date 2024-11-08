@@ -121,7 +121,42 @@ void search_tracert(GraphType* g, int v, int dest) {
 	}
 }
 
-int cmd_continue = 0;
+void search_ping(GraphType* g, int v, int dest) {
+	
+	GraphNode* w;
+	QueueType q;
+	int visited[MAX_VERTICES] = { 0 };
+	
+	queue_init(&q);    			
+	visited[v] = 1;
+	
+	enqueue(&q, v);	
+			 
+	while (!is_empty(&q)) {
+		v = dequeue(&q);
+		for (w = g->adj_list[v]; w; w = w->link) {
+			
+			if (!visited[w->vertex]) {
+				visited[w->vertex] = 1;
+				enqueue(&q, w->vertex);	
+			}
+
+			if (w->vertex == dest) {
+				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
+				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
+				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
+				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
+
+				return;
+			}
+		}
+	}
+
+	printf("Request timeout for icmp_seq 0\n");
+	printf("Request timeout for icmp_seq 1\n");
+	printf("Request timeout for icmp_seq 2\n");
+	printf("Request timeout for icmp_seq 3\n");
+}
 
 typedef int cmd_func(int argc, char* argv[], GraphType *g);
 
@@ -179,21 +214,21 @@ int commandPing(int argc, char* argv[], GraphType *g) {
 		printf("올바른 형식의 명령을 입력하세요.\n");
 		return -1;
 	} else {
-		bfs_list(g, 0, 1);
-		printf("\n");
-		printf("PING %s (%s): 56 data bytes\n");
+		argv[2][strcspn(argv[2], "\n")] = '\0'; // 개행 문자 제거
+		int src, dest;
 
-// Request timeout for icmp_seq 0
-// Request timeout for icmp_seq 1
-// Request timeout for icmp_seq 2
-// Request timeout for icmp_seq 3
-// Request timeout for icmp_seq 4
-// Request timeout for icmp_seq 5
-// Request timeout for icmp_seq 6
-// ^C
-// --- 192.168.1.1 ping statistics ---
-// 8 packets transmitted, 0 packets received, 100.0% packet loss
-	}	
+		for (int i = 0; i < MAX_VERTICES; i++) {
+			if (strcmp(deviceList[i].ip, argv[1]) == 0)
+				src = deviceList[i].id;
+			if (strcmp(deviceList[i].ip, argv[2]) == 0)
+				dest = deviceList[i].id;
+		}
+
+		printf("Pinging %s with 32 bytes of data:\n\n", argv[1]);		
+		search_ping(g, src, dest);
+		printf("\nPing complete.\n");
+	}
+
 	return 0;
 }
 
@@ -212,22 +247,10 @@ int commandTracert(int argc, char* argv[], GraphType *g) {
 			if (strcmp(deviceList[i].ip, argv[2]) == 0)
 				dest = deviceList[i].id;
 		}
-		//printf("tracert debug: src = %d, dest = %d\n", src, dest);
 
 		printf("Tracing route to %s over a maximum of %d hops:\n\n", argv[1], MAX_VERTICES);		
 		search_tracert(g, src, dest);
 		printf("\nTrace complete.\n");
-	}
-	return 0;
-}
-
-//명령어 "clear"
-int commandClear(int argc, char* argv[], GraphType *g) {
-	if (argv[1] == NULL) {
-
-	}
-	else {
-        
 	}
 	return 0;
 }
@@ -247,10 +270,8 @@ int commandTunnel(int argc, char* argv[], GraphType *g) {
 CommandList commandList[] = {
 	{"config",	commandConfig},
 	{"route",	commandRoute},
-// 	{"ping",	commandPing},
- 	{"tracert",	commandTracert},
-// //    {"clear",   commandClear},
-// //	{"clear",   commandTunnel}
+ 	{"ping",	commandPing},
+ 	{"tracert",	commandTracert}
 };
 
 void command(char* cmd, GraphType *g) {
