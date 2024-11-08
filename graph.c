@@ -64,8 +64,6 @@ typedef struct GraphType {
 	GraphNode* adj_list[MAX_VERTICES];
 } GraphType;
 
-int visited[MAX_VERTICES];
-
 void graph_init(GraphType* g) {
 	int v;
 	g->n = 0;
@@ -84,7 +82,7 @@ void insert_vertex(GraphType* g, int v) {
 void insert_edge(GraphType* g, int u, int v) {
 	GraphNode* node;
 	if (u >= g->n || v >= g->n) {
-		printf("%d, %d, %d\n", u, v, g->n);
+		printf("debug(insert) ==> %d, %d, %d\n", u, v, g->n);
 		fprintf(stderr, "그래프: 정점 번호 오류\n");
 		return;
 	}
@@ -94,22 +92,32 @@ void insert_edge(GraphType* g, int u, int v) {
 	g->adj_list[u] = node;
 }
 
-void bfs_list(GraphType* g, int v) {
+void search_tracert(GraphType* g, int v, int dest) {
+	
 	GraphNode* w;
 	QueueType q;
-
+	int visited[MAX_VERTICES] = { 0 };
+	int count = 2;	
+	
 	queue_init(&q);    			
-	visited[v] = 1;      
-	printf("%d 방문 -> ", v);
-	enqueue(&q, v);		
+	visited[v] = 1;
+	
+	printf("\t1\t0 ms\t0 ms\t 0 ms\t%s\n", deviceList[v].ip);  
+	
+	enqueue(&q, v);	
+			 
 	while (!is_empty(&q)) {
-		v = dequeue(&q);		 
-		for (w = g->adj_list[v]; w; w = w->link) 
+		v = dequeue(&q);
+		for (w = g->adj_list[v]; w; w = w->link) {
+			
 			if (!visited[w->vertex]) {
-				visited[w->vertex] = 1;  
-				printf("%d 방문 -> ", w->vertex);
+				visited[w->vertex] = 1;
+				printf("\t%d\t0 ms\t0 ms\t 0 ms\t%s\n", count++, deviceList[w->vertex].ip);  
 				enqueue(&q, w->vertex);	
 			}
+			if (w->vertex == dest)
+				break;
+		}
 	}
 }
 
@@ -150,6 +158,7 @@ int commandRoute(int argc, char* argv[], GraphType *g) {
 		printf("올바른 형식의 명령을 입력하세요.\n");
 		return -1;
 	} else {
+		argv[2][strcspn(argv[2], "\n")] = '\0'; // 개행 문자 제거
 		int from, to;
 
 		for (int i = 0; i < MAX_VERTICES; i++) {
@@ -158,33 +167,56 @@ int commandRoute(int argc, char* argv[], GraphType *g) {
 			if (strcmp(deviceList[i].ip, argv[2]) == 0)
 				to = deviceList[i].id;
 		}
-
 		insert_edge(g, from, to);
 	}
 
 	return 0;
 }
 
-//명령어 "ping" (예: route 192.168.1.1 192.168.2.1)
+//명령어 "ping" (예: ping 192.168.1.1 192.168.2.1)
 int commandPing(int argc, char* argv[], GraphType *g) {
 	if (argv[1] == NULL) {
 		printf("올바른 형식의 명령을 입력하세요.\n");
 		return -1;
 	} else {
-		printf("너비 우선 탐색\n");
-		bfs_list(g, 0);
+		bfs_list(g, 0, 1);
 		printf("\n");
+		printf("PING %s (%s): 56 data bytes\n");
+
+// Request timeout for icmp_seq 0
+// Request timeout for icmp_seq 1
+// Request timeout for icmp_seq 2
+// Request timeout for icmp_seq 3
+// Request timeout for icmp_seq 4
+// Request timeout for icmp_seq 5
+// Request timeout for icmp_seq 6
+// ^C
+// --- 192.168.1.1 ping statistics ---
+// 8 packets transmitted, 0 packets received, 100.0% packet loss
 	}	
 	return 0;
 }
 
-//명령어 "tracert"
+//명령어 "tracert" (예: tracert 192.168.1.1 192.168.2.1)
 int commandTracert(int argc, char* argv[], GraphType *g) {
 	if (argv[1] == NULL) {
+		printf("올바른 형식의 명령을 입력하세요.\n");
+		return -1;
+	} else {
+		argv[2][strcspn(argv[2], "\n")] = '\0'; // 개행 문자 제거
+		int src, dest;
 
-	}
-	else {
+		for (int i = 0; i < MAX_VERTICES; i++) {
+			if (strcmp(deviceList[i].ip, argv[1]) == 0)
+				src = deviceList[i].id;
+			if (strcmp(deviceList[i].ip, argv[2]) == 0)
+				dest = deviceList[i].id;
+		}
+		//printf("tracert debug: src = %d, dest = %d\n", src, dest);
 
+		printf("Tracing route to %s over a maximum of %d hops:\n\n", argv[1], MAX_VERTICES);		
+		search_tracert(g, src, dest);
+		printf("\nTrace complete.\n");
 	}
 	return 0;
 }
@@ -216,7 +248,7 @@ CommandList commandList[] = {
 	{"config",	commandConfig},
 	{"route",	commandRoute},
 // 	{"ping",	commandPing},
-// 	{"tracert",	commandTracert},
+ 	{"tracert",	commandTracert},
 // //    {"clear",   commandClear},
 // //	{"clear",   commandTunnel}
 };
@@ -253,7 +285,6 @@ int main() {
 
 	printf("Microsoft Windows [Version 10.0.22631.4317]\n");
     printf("(c) Microsoft Corporation. All rights reserved.\n");
-	printf("(c) Microsoft Corporation. All rights reserved.\n");
 	
 	while (1) {
 		printf("prompt>> ");
