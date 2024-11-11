@@ -82,7 +82,6 @@ void insert_vertex(GraphType* g, int v) {
 void insert_edge(GraphType* g, int u, int v) {
 	GraphNode* node;
 	if (u >= g->n || v >= g->n) {
-		printf("debug(insert) ==> %d, %d, %d\n", u, v, g->n);
 		fprintf(stderr, "그래프: 정점 번호 오류\n");
 		return;
 	}
