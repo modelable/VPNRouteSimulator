@@ -91,35 +91,6 @@ void insert_edge(GraphType* g, int u, int v) {
 	g->adj_list[u] = node;
 }
 
-void search_tracert(GraphType* g, int v, int dest) {
-	
-	GraphNode* w;
-	QueueType q;
-	int visited[MAX_VERTICES] = { 0 };
-	int count = 2;	
-	
-	queue_init(&q);    			
-	visited[v] = 1;
-	
-	printf("\t1\t0 ms\t0 ms\t 0 ms\t%s\n", deviceList[v].ip);  
-	
-	enqueue(&q, v);	
-			 
-	while (!is_empty(&q)) {
-		v = dequeue(&q);
-		for (w = g->adj_list[v]; w; w = w->link) {
-			
-			if (!visited[w->vertex]) {
-				visited[w->vertex] = 1;
-				printf("\t%d\t0 ms\t0 ms\t 0 ms\t%s\n", count++, deviceList[w->vertex].ip);  
-				enqueue(&q, w->vertex);	
-			}
-			if (w->vertex == dest)
-				break;
-		}
-	}
-}
-
 void search_ping(GraphType* g, int v, int dest) {
 	
 	GraphNode* w;
@@ -155,6 +126,34 @@ void search_ping(GraphType* g, int v, int dest) {
 	printf("Request timeout for icmp_seq 1\n");
 	printf("Request timeout for icmp_seq 2\n");
 	printf("Request timeout for icmp_seq 3\n");
+}
+
+void search_tracert(GraphType* g, int v, int dest) {
+	GraphNode* w;
+	QueueType q;
+	int visited[MAX_VERTICES] = { 0 };
+	int count = 2;	
+	
+	queue_init(&q);    			
+	visited[v] = 1;
+	
+	printf("\t1\t0 ms\t0 ms\t 0 ms\t%s\n", deviceList[v].ip);  
+	
+	enqueue(&q, v);	
+			 
+	while (!is_empty(&q)) {
+		v = dequeue(&q);
+		for (w = g->adj_list[v]; w; w = w->link) {
+			
+			if (!visited[w->vertex]) {
+				visited[w->vertex] = 1;
+				printf("\t%d\t0 ms\t0 ms\t 0 ms\t%s\n", count++, deviceList[w->vertex].ip);  
+				enqueue(&q, w->vertex);	
+			}
+			if (w->vertex == dest)
+				break;
+		}
+	}
 }
 
 typedef int cmd_func(int argc, char* argv[], GraphType *g);
@@ -207,7 +206,7 @@ int commandRoute(int argc, char* argv[], GraphType *g) {
 	return 0;
 }
 
-//명령어 "ping" (예: ping 192.168.1.1 192.168.2.1)
+//명령어 "ping" (예: ping 192.168.1.2 192.168.2.2)
 int commandPing(int argc, char* argv[], GraphType *g) {
 	if (argv[1] == NULL) {
 		printf("올바른 형식의 명령을 입력하세요.\n");
@@ -270,7 +269,8 @@ CommandList commandList[] = {
 	{"config",	commandConfig},
 	{"route",	commandRoute},
  	{"ping",	commandPing},
- 	{"tracert",	commandTracert}
+ 	{"tracert",	commandTracert},
+	//{"tunnel",	commandTunnel},
 };
 
 void command(char* cmd, GraphType *g) {
@@ -304,7 +304,7 @@ int main() {
 	graph_init(g);
 
 	printf("Microsoft Windows [Version 10.0.22631.4317]\n");
-    printf("(c) Microsoft Corporation. All rights reserved.\n");
+    printf("(c) Microsoft Corporation. All rights reserved.\n\n");
 	
 	while (1) {
 		printf("prompt>> ");
