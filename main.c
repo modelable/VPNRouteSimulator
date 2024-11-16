@@ -253,16 +253,35 @@ int commandTracert(int argc, char* argv[], GraphType *g) {
 	return 0;
 }
 
-//명령어 "tunnel"
-int commandTunnel(int argc, char* argv[], GraphType *g) {
-	if (argv[1] == NULL) {
+//명령어 "tunnel" (예: tunnel 192.168.1.1 192.168.2.1)
+int commandTunnel(int argc, char* argv[], GraphType* g) {
+    if (argc < 3) {
+        printf("Usage: tunnel <IP1> <IP2>\n");
+        return -1;
+    } else {
+    	int from = -1, to = -1;
+    
+		// IP 주소를 찾아서 정점 인덱스를 가져옴
+    	for (int i = 0; i < g->n; i++) {
+        	if (strcmp(deviceList[i].ip, argv[1]) == 0) from = i;
+        	if (strcmp(deviceList[i].ip, argv[2]) == 0) to = i;
+    	}
+    	
+		if (from == -1 || to == -1) { // IP가 없을 경우 오류
+        	printf("Error: IP not found.\n");
+        	return -1;
+    	}
 
+    	// 두 정점 사이에 간선 추가 (양방향 연결)
+    	insert_edge(g, from, to);
+    	insert_edge(g, to, from);
+    	
+		printf("Tunnel created between %s and %s.\n", argv[1], argv[2]);
 	}
-	else {
-        
-	}
-	return 0;
+
+    return 0;
 }
+
 
 //명령어 목록(배열)
 CommandList commandList[] = {
@@ -270,7 +289,7 @@ CommandList commandList[] = {
 	{"route",	commandRoute},
  	{"ping",	commandPing},
  	{"tracert",	commandTracert},
-	//{"tunnel",	commandTunnel},
+	{"tunnel",	commandTunnel}
 };
 
 void command(char* cmd, GraphType *g) {
