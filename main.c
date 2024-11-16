@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_QUEUE_SIZE 10
 #define MAX_VERTICES 50
@@ -91,20 +92,20 @@ void insert_edge(GraphType* g, int u, int v) {
 	g->adj_list[u] = node;
 }
 
-void search_ping(GraphType* g, int v, int dest) {
+int search_ping(GraphType* g, int src, int dest) {
 	
 	GraphNode* w;
 	QueueType q;
 	int visited[MAX_VERTICES] = { 0 };
 	
 	queue_init(&q);    			
-	visited[v] = 1;
+	visited[src] = 1;
 	
-	enqueue(&q, v);	
+	enqueue(&q, src);	
 			 
 	while (!is_empty(&q)) {
-		v = dequeue(&q);
-		for (w = g->adj_list[v]; w; w = w->link) {
+		src = dequeue(&q);
+		for (w = g->adj_list[src]; w; w = w->link) {
 			
 			if (!visited[w->vertex]) {
 				visited[w->vertex] = 1;
@@ -112,46 +113,60 @@ void search_ping(GraphType* g, int v, int dest) {
 			}
 
 			if (w->vertex == dest) {
-				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
-				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
-				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
-				printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
-
-				return;
+				
+				return 1;
 			}
 		}
 	}
 
-	printf("Request timeout for icmp_seq 0\n");
-	printf("Request timeout for icmp_seq 1\n");
-	printf("Request timeout for icmp_seq 2\n");
-	printf("Request timeout for icmp_seq 3\n");
+	return -1;
 }
 
-void search_tracert(GraphType* g, int v, int dest) {
+void search_tracert(GraphType* g, int src, int dest) {
+
 	GraphNode* w;
 	QueueType q;
 	int visited[MAX_VERTICES] = { 0 };
-	int count = 2;	
+	int prev[MAX_VERTICES];
+	int v;
+	int hop = 1;	
 	
 	queue_init(&q);    			
-	visited[v] = 1;
-	
-	printf("\t1\t0 ms\t0 ms\t 0 ms\t%s\n", deviceList[v].ip);  
-	
-	enqueue(&q, v);	
-			 
+	enqueue(&q, src);	
+	visited[src] = 1;
+	prev[src] = -1; //src의 부모 노드는 존재하지 않음
+		 
 	while (!is_empty(&q)) {
 		v = dequeue(&q);
+
 		for (w = g->adj_list[v]; w; w = w->link) {
 			
 			if (!visited[w->vertex]) {
 				visited[w->vertex] = 1;
-				printf("\t%d\t0 ms\t0 ms\t 0 ms\t%s\n", count++, deviceList[w->vertex].ip);  
+				prev[w->vertex] = v; //부모 노드 기록
+				//printf("\t%d\t0 ms\t0 ms\t 0 ms\t%s\n", count++, deviceList[w->vertex].ip);  
 				enqueue(&q, w->vertex);	
+
+				if (w->vertex == dest) {
+
+                    int path[MAX_VERTICES];
+                    int path_length = 0;
+                    int temp = dest;
+
+                    // 경로를 prev 배열로 역추적
+                    while (temp != -1) {
+                        path[path_length++] = temp;
+                        temp = prev[temp];
+                    }
+
+                    // 경로 출력 (역순으로 저장된 경로 출력)
+                    for (int i = path_length - 1; i >= 0; i--) {
+                        printf("\t%d\t0 ms\t0 ms\t0 ms\t%s\n", hop++, deviceList[path[i]].ip);
+                    }
+
+                    return;
+				}
 			}
-			if (w->vertex == dest)
-				break;
 		}
 	}
 }
@@ -222,8 +237,12 @@ int commandPing(int argc, char* argv[], GraphType *g) {
 				dest = deviceList[i].id;
 		}
 
-		printf("Pinging %s with 32 bytes of data:\n\n", argv[1]);		
-		search_ping(g, src, dest);
+		printf("Pinging %s with 32 bytes of data:\n\n", argv[1]);
+		for (int i = 0; i < 4; i++) {	
+			sleep(1);
+			if (search_ping(g, src, dest) == 1) printf("Reply from %s: bytes=32 time<1ms TTL=254\n", deviceList[dest]);
+			else if (search_ping(g, src, dest) == -1) printf("Request timeout for icmp_seq %d\n", i);
+		}
 		printf("\nPing complete.\n");
 	}
 
@@ -259,12 +278,15 @@ int commandTunnel(int argc, char* argv[], GraphType* g) {
         printf("Usage: tunnel <IP1> <IP2>\n");
         return -1;
     } else {
+		argv[2][strcspn(argv[2], "\n")] = '\0'; // 개행 문자 제거
     	int from = -1, to = -1;
     
 		// IP 주소를 찾아서 정점 인덱스를 가져옴
-    	for (int i = 0; i < g->n; i++) {
-        	if (strcmp(deviceList[i].ip, argv[1]) == 0) from = i;
-        	if (strcmp(deviceList[i].ip, argv[2]) == 0) to = i;
+    	for (int i = 0; i < MAX_VERTICES; i++) {
+        	if (strcmp(deviceList[i].ip, argv[1]) == 0)
+				from = deviceList[i].id;
+        	if (strcmp(deviceList[i].ip, argv[2]) == 0)
+				to = deviceList[i].id;
     	}
     	
 		if (from == -1 || to == -1) { // IP가 없을 경우 오류
@@ -308,7 +330,7 @@ void command(char* cmd, GraphType *g) {
 			if (strcmp(p->cmd, argv[0]) == 0) {
 				p->func(argc, argv, g);
 				break;
-			} else if (strcmp("exit\n", argv[0]) == 0) {
+			} else if (strcmp("exit\n", argv[0]) == 0 || strcmp("quit\n", argv[0]) == 0) {
 				exit(1);
 			}
 			p++;
