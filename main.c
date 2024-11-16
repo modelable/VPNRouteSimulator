@@ -311,8 +311,7 @@ int commandTunnel(int argc, char *argv[], GraphType *g)
 		int src = -1, dest = -1;
 
 		// IP 주소를 찾아서 정점 인덱스를 가져옴
-		for (int i = 0; i < MAX_VERTICES; i++)
-		{
+		for (int i = 0; i < MAX_VERTICES; i++) {
 			if (strcmp(deviceList[i].ip, argv[1]) == 0)
 				src = deviceList[i].id;
 			if (strcmp(deviceList[i].ip, argv[2]) == 0)
