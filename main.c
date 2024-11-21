@@ -70,32 +70,32 @@ typedef struct GraphNode
 
 typedef struct GraphType
 {
-	int n;
+	int id;
 	GraphNode *adj_list[MAX_VERTICES];
 } GraphType;
 
 void graph_init(GraphType *g)
 {
 	int v;
-	g->n = 0;
+	g->id = 0;
 	for (v = 0; v < MAX_VERTICES; v++)
 		g->adj_list[v] = NULL;
 }
 
-void insert_vertex(GraphType *g, int v)
+void insert_vertex(GraphType *g)
 {
-	if (((g->n) + 1) > MAX_VERTICES) {
+	if (((g->id) + 1) > MAX_VERTICES) {
 		fprintf(stderr, "그래프: 정점의 개수 초과\n");
 		return;
 	}
-	g->n++;
+	g->id++;
 }
 
 void insert_edge(GraphType *g, int u, int v)
 {
 	GraphNode *node;
 
-	if (u >= g->n || v >= g->n) {
+	if (u >= g->id || v >= g->id) {
 		fprintf(stderr, "그래프: 정점 번호 오류\n");
 		return;
 	}
@@ -197,13 +197,13 @@ int commandConfig(int argc, char *argv[], GraphType *g)
 	} else {
 		Device device;
 
-		device.id = g->n;
+		device.id = g->id;
 		strcpy(device.ip, argv[1]);
 		strcpy(device.subnet, argv[2]);
 
-		deviceList[g->n] = device;
+		deviceList[g->id] = device;
 
-		insert_vertex(g, device.id);
+		insert_vertex(g);
 	}
 
 	return 0;
