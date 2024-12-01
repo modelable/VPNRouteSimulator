@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 #define MAX_QUEUE_SIZE 10
 #define MAX_VERTICES 50
 #define MAX_ARGS 10
